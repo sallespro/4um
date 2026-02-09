@@ -290,7 +290,7 @@ export default function ChatInterface() {
                                 : "bg-card border border-border"
                         )}>
                             {msg.role === 'assistant' ? (
-                                <article className="prose prose-sm dark:prose-invert max-w-none">
+                                <article className="prose prose-sm dark:prose-invert max-w-none prose-p:text-foreground prose-headings:text-foreground prose-strong:text-foreground prose-li:text-foreground">
                                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                                 </article>
                             ) : (

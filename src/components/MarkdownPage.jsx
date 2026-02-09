@@ -55,7 +55,7 @@ export default function MarkdownPage() {
 
     return (
         <div className="max-w-4xl mx-auto p-6 md:p-12 overflow-y-auto">
-            <article className="prose dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-p:text-muted-foreground prose-a:text-primary">
+            <article className="prose dark:prose-invert max-w-none prose-headings:font-bold prose-h1:text-3xl prose-h2:text-2xl prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-a:text-primary">
                 <ReactMarkdown>{content}</ReactMarkdown>
             </article>
         </div>

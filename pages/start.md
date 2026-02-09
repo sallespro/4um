@@ -1,8 +1,10 @@
+# AI Studio 
+> expertise, tools and action
+
+A cloudpilot criou o programa **AI Studio** para produção de projetos de IA .
+
+Oferecemos **serviços** e **ferramentas** que dão suporte aos **projetos de IA** e criam um **plano de adoção de IA** na sua empresa.
 
 
-![](https://0.gravatar.com/avatar/fbd2257a6e7544b9d31b75b7590effadf578f07d52f4530e00597335bce400a8)
 
-# SKILLBASE
-
-Como a decisão mais recente da Copom afeta minha posição em Marlim Dividendos ?
 

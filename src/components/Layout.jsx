@@ -50,7 +50,7 @@ export default function Layout() {
                     </button> */}
                     {sidebarOpen && (
                         <span className="ml-3 font-semibold text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                            skillbase
+                            cloudpilot
                         </span>
                     )}
                 </div>

@@ -1,13 +1,21 @@
-## Fase 1: As Oportunidades Mais Fáceis (0-6 meses)
+# Workflows
 
-- Automatizando as tarefas administrativas (Conformidade, Risco, Relatórios)
+Mais que um programa de aprendizagem, o trabalho se realiza com apoio direto de consultores, utiliza ambientes completos de desenvolvimento com ferramentas de IA e inclui a exposição prática de projetos e plataformas de integração.
 
-## Fase 2: Evolução da Experiência do Cliente (6-18 meses)
+Em sessões invididualizadas e workshops você poderá explorar as potenciais aplicações de IA Generativa e Agêntica no seu âmbito de trabalho.
 
-- Assessoria em tempo real com agentes de IA
+# Abordagem
 
-- Implementando interfaces de IA sofisticadas e seguras que permitem aos clientes consultar seus portfólios em linguagem natural
+- **(0-6 meses) As Oportunidades Mais Fáceis** 
 
-## Fase 3: Núcleo Nativo de IA (18+ meses)
+Automatizando as tarefas administrativas (Conformidade, Risco, Relatórios)
 
-- Monitoramento autônomo de conformidade e risco
+- **(6-18 meses) Evolução da Experiência do Cliente** 
+
+Assessoria em tempo real com agentes de IA
+
+Implementando interfaces de IA que permitem aos clientes consultar seus portfólios em linguagem natural
+
+- **(18+ meses) Core IA** 
+
+Monitoramento autônomo de conformidade e risco
