@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Clock, Zap, ArrowRight, Loader2 } from 'lucide-react';
+import { MessageSquare, Clock, Zap, ArrowRight, Loader2, Trash2 } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -35,6 +35,28 @@ export default function Dashboard() {
         }
     }
 
+    async function deleteSession(e, id) {
+        e.stopPropagation();
+        if (!confirm('Are you sure you want to delete this session?')) return;
+
+        try {
+            const res = await apiRequest(`/api/sessions/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (res.ok) {
+                setSessions(prev => prev.filter(s => s.id !== id));
+                // Update stats
+                setStats(prev => ({
+                    ...prev,
+                    totalSessions: prev.totalSessions - 1
+                }));
+            }
+        } catch (error) {
+            console.error('Failed to delete session:', error);
+        }
+    }
+
     function formatTokens(tokens) {
         if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`;
         if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}K`;
@@ -58,58 +80,17 @@ export default function Dashboard() {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                    Welcome to CloudPilot
+                    custom learning programs
                 </h1>
                 <p className="text-muted-foreground mt-2">
-                    Your AI-powered assistant for intelligent conversations.
+                    custom workflows for AI powered business
                 </p>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-6 rounded-xl bg-card border border-border">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-lg bg-primary/10">
-                            <MessageSquare className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{stats.totalSessions}</p>
-                            <p className="text-sm text-muted-foreground">Chat Sessions</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-6 rounded-xl bg-card border border-border">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-lg bg-green-500/10">
-                            <Zap className="w-5 h-5 text-green-500" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">{formatTokens(stats.totalTokens)}</p>
-                            <p className="text-sm text-muted-foreground">Total Tokens Used</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="p-6 rounded-xl bg-card border border-border">
-                    <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-lg bg-blue-500/10">
-                            <Clock className="w-5 h-5 text-blue-500" />
-                        </div>
-                        <div>
-                            <p className="text-2xl font-bold">
-                                {sessions.length > 0 ? formatDate(sessions[0]?.updated_at || sessions[0]?.created_at) : '—'}
-                            </p>
-                            <p className="text-sm text-muted-foreground">Last Activity</p>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             {/* Session History */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold">Recent Sessions</h2>
+                    <h2 className="text-xl font-semibold">Sessions</h2>
                 </div>
 
                 {loading ? (
@@ -127,11 +108,11 @@ export default function Dashboard() {
                 ) : (
                     <div className="space-y-2">
                         {sessions.slice(0, 10).map((session) => (
-                            <button
+                            <div
                                 key={session.id}
                                 onClick={() => setSearchParams({ session: session.id })}
                                 className={cn(
-                                    "w-full group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all text-left",
+                                    "w-full group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all text-left cursor-pointer",
                                     searchParams.get('session') === session.id && "border-primary bg-primary/5"
                                 )}
                             >
@@ -149,23 +130,47 @@ export default function Dashboard() {
                                             </span>
                                         </div>
                                     </div>
-                                    <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={(e) => deleteSession(e, session.id)}
+                                            className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+                                            title="Delete session"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                        <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
                                 </div>
-                            </button>
+                            </div>
                         ))}
                     </div>
                 )}
             </div>
 
-            {/* Features */}
-            <div className="p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                <h2 className="text-xl font-semibold mb-4">✨ Features</h2>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li>• <strong>RAG-Enhanced Chat</strong> — Responses include context from your content</li>
-                    <li>• <strong>Session History</strong> — All conversations are saved and retrievable</li>
-                    <li>• <strong>Token Tracking</strong> — Monitor your AI usage per session</li>
-                </ul>
+            {/* Compact Stats Cards at bottom */}
+            <div className="flex items-center gap-6 py-4 px-1 border-t border-border/40">
+                <div className="flex flex-col">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sessions</span>
+                    <span className="text-lg font-bold">{stats.totalSessions}</span>
+                </div>
+
+                <div className="w-px h-8 bg-border/60" />
+
+                <div className="flex flex-col">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Tokens</span>
+                    <span className="text-lg font-bold">{formatTokens(stats.totalTokens)}</span>
+                </div>
+
+                <div className="w-px h-8 bg-border/60" />
+
+                <div className="flex flex-col">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Activity</span>
+                    <span className="text-lg font-bold">
+                        {sessions.length > 0 ? formatDate(sessions[0]?.updated_at || sessions[0]?.created_at) : '—'}
+                    </span>
+                </div>
             </div>
+
         </div>
     );
 }

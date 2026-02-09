@@ -42,15 +42,15 @@ export default function Layout() {
             >
                 {/* Header */}
                 <div className="flex items-center h-16 px-4 border-b border-border">
-                    <button
+                    {/* <button
                         onClick={() => setSidebarOpen(!sidebarOpen)}
                         className="p-2 rounded-lg hover:bg-muted transition-colors"
                     >
                         <Menu className="w-5 h-5" />
-                    </button>
+                    </button> */}
                     {sidebarOpen && (
                         <span className="ml-3 font-semibold text-lg bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                            CloudPilot
+                            skillbase
                         </span>
                     )}
                 </div>
@@ -76,7 +76,7 @@ export default function Layout() {
                     <div className={cn("py-2", sidebarOpen && "px-3")}>
                         {sidebarOpen && (
                             <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-                                Pages
+                                Modules
                             </span>
                         )}
                     </div>
@@ -148,12 +148,7 @@ export default function Layout() {
                         <MessageSquare className="w-5 h-5" />
                     </button>
                     {chatOpen && (
-                        <span className="font-medium text-muted-foreground">Chat</span>
-                    )}
-                    {chatOpen && (
-                        <button className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground" title="Session history">
-                            <History className="w-4 h-4" />
-                        </button>
+                        <span className="font-medium text-muted-foreground">Agent</span>
                     )}
                 </div>
 
