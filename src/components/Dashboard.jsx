@@ -3,7 +3,9 @@ import { MessageSquare, Clock, Zap, ArrowRight, Loader2, Trash2, Edit, Plus } fr
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 import GuidedSessionEditor from './GuidedSessionEditor';
+import BundleEditor from './BundleEditor';
 
 export default function Dashboard() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -14,15 +16,23 @@ export default function Dashboard() {
     const [editingSession, setEditingSession] = useState(null);
     const [showEditor, setShowEditor] = useState(false);
 
+    // Bundles State
+    const [bundles, setBundles] = useState([]);
+    const [showBundleEditor, setShowBundleEditor] = useState(false);
+    const [editingBundle, setEditingBundle] = useState(null);
+    const [runningBundleId, setRunningBundleId] = useState(null);
+    const [bundleResult, setBundleResult] = useState(null);
+
     useEffect(() => {
         loadData();
     }, []);
 
     async function loadData() {
         try {
-            const [sessionsRes, guidedRes] = await Promise.all([
+            const [sessionsRes, guidedRes, bundlesRes] = await Promise.all([
                 apiRequest('/api/sessions'),
-                apiRequest('/api/guided-sessions')
+                apiRequest('/api/guided-sessions'),
+                apiRequest('/api/bundles')
             ]);
 
             if (sessionsRes.ok) {
@@ -40,6 +50,11 @@ export default function Dashboard() {
             if (guidedRes.ok) {
                 const data = await guidedRes.json();
                 setGuidedSessions(data);
+            }
+
+            if (bundlesRes.ok) {
+                const data = await bundlesRes.json();
+                setBundles(data);
             }
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
@@ -88,6 +103,61 @@ export default function Dashboard() {
             console.error('Failed to delete guided session:', error);
         }
     }
+
+    // Bundle Handlers
+    const handleEditBundle = (e, bundle) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setEditingBundle(bundle);
+        setShowBundleEditor(true);
+    };
+
+    const handleSaveBundle = (savedBundle) => {
+        if (editingBundle) {
+            setBundles(prev => prev.map(b => b.id === savedBundle.id ? savedBundle : b));
+        } else {
+            setBundles(prev => [savedBundle, ...prev]);
+        }
+        setEditingBundle(null);
+    };
+
+    const handleDeleteBundle = async (e, id) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!confirm('Are you sure you want to delete this bundle?')) return;
+
+        try {
+            const res = await apiRequest(`/api/bundles/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                setBundles(prev => prev.filter(b => b.id !== id));
+            }
+        } catch (error) {
+            console.error('Failed to delete bundle:', error);
+        }
+    };
+
+    const handleRunBundle = async (e, id) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (runningBundleId) return;
+
+        setRunningBundleId(id);
+        try {
+            const res = await apiRequest(`/api/bundles/${id}/run`, { method: 'POST' });
+            if (res.ok) {
+                const data = await res.json();
+                setBundleResult(data.result);
+            } else {
+                const err = await res.json();
+                alert('Failed to run bundle: ' + (err.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Failed to run bundle:', error);
+            alert('Failed to run bundle');
+        } finally {
+            setRunningBundleId(null);
+        }
+    };
 
     async function createGuidedSession(topicOrId) {
         // If it's the hardcoded 'investments' topic
@@ -166,6 +236,90 @@ export default function Dashboard() {
                 </p>
             </div>
 
+            {/* Bundles Section */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold">Bundles</h2>
+                    <button
+                        onClick={() => {
+                            setEditingBundle(null);
+                            setShowBundleEditor(true);
+                        }}
+                        className="flex items-center gap-2 text-sm font-medium text-primary hover:bg-primary/10 px-3 py-2 rounded-lg transition-colors"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Create New
+                    </button>
+                </div>
+
+                {bundles.length === 0 ? (
+                    <div className="p-8 rounded-xl bg-card border border-border text-center text-muted-foreground">
+                        <p>No bundles created yet. Create a bundle to generate content from your sessions.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {bundles.map(bundle => (
+                            <div
+                                key={bundle.id}
+                                className="p-4 rounded-xl bg-card border border-border text-left flex flex-col gap-3 group relative hover:border-primary/50 transition-all"
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                            <Zap className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium">{bundle.title}</h3>
+                                            <p className="text-xs text-muted-foreground mt-0.5">
+                                                {bundle.target_session_ids?.length || 0} sessions linked
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={(e) => handleEditBundle(e, bundle)}
+                                            className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors"
+                                            title="Edit"
+                                        >
+                                            <Edit className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                            onClick={(e) => handleDeleteBundle(e, bundle.id)}
+                                            className="p-2 text-muted-foreground hover:text-destructive hover:bg-muted rounded-lg transition-colors"
+                                            title="Delete"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <p className="text-sm text-muted-foreground line-clamp-2 bg-muted/30 p-2 rounded-md font-mono text-xs">
+                                    {bundle.prompt}
+                                </p>
+
+                                <button
+                                    onClick={(e) => handleRunBundle(e, bundle.id)}
+                                    disabled={runningBundleId === bundle.id}
+                                    className="mt-auto w-full flex items-center justify-center gap-2 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-70"
+                                >
+                                    {runningBundleId === bundle.id ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Zap className="w-4 h-4" />
+                                            Run Bundle
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* Explore Topics */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -238,13 +392,51 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Guided Session Editor Modal */}
+            {/* Managed Modals */}
             {showEditor && (
                 <GuidedSessionEditor
                     session={editingSession}
                     onClose={() => setShowEditor(false)}
                     onSave={handleSaveGuidedSession}
                 />
+            )}
+
+            {showBundleEditor && (
+                <BundleEditor
+                    bundle={editingBundle}
+                    onClose={() => setShowBundleEditor(false)}
+                    onSave={handleSaveBundle}
+                />
+            )}
+
+            {bundleResult && (
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="w-full max-w-4xl bg-card border border-border rounded-xl shadow-lg flex flex-col max-h-[90vh]">
+                        <div className="flex items-center justify-between p-6 border-b border-border">
+                            <h2 className="text-xl font-semibold">Bundle Result</h2>
+                            <button
+                                onClick={() => setBundleResult(null)}
+                                className="p-2 hover:bg-muted rounded-lg transition-colors"
+                            >
+                                <span className="sr-only">Close</span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x w-5 h-5"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-8">
+                            <article className="prose dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground">
+                                <ReactMarkdown>{bundleResult}</ReactMarkdown>
+                            </article>
+                        </div>
+                        <div className="p-6 border-t border-border flex justify-end">
+                            <button
+                                onClick={() => setBundleResult(null)}
+                                className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Session History */}
