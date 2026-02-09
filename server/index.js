@@ -10,6 +10,7 @@ import chatRouter from './routes/chat.js';
 import sessionsRouter from './routes/sessions.js';
 import ragRouter from './routes/rag.js';
 import webhooksRouter from './routes/webhooks.js';
+import guidedSessionsRouter from './routes/guided-sessions.js';
 
 // Middleware
 import { authMiddleware } from './middleware/auth.js';
@@ -40,6 +41,7 @@ app.get('/api/health', (req, res) => {
 // Protected routes (auth required)
 app.use('/api/chat', authMiddleware, chatRouter);
 app.use('/api/sessions', authMiddleware, sessionsRouter);
+app.use('/api/guided-sessions', authMiddleware, guidedSessionsRouter);
 
 // Serve static files from Vite build in production
 if (process.env.NODE_ENV === 'production') {

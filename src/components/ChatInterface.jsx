@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { Send, User, Bot, Loader2, Plus, ChevronLeft } from 'lucide-react';
+import { Send, User, Bot, Loader2, Plus, ChevronLeft, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
+import GuidedSessionEditor from './GuidedSessionEditor';
 
 export default function ChatInterface() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -133,6 +134,9 @@ export default function ChatInterface() {
         }
     }, [messages]);
 
+    const [guidedQuestions, setGuidedQuestions] = useState([]);
+    const [showSaveModal, setShowSaveModal] = useState(false);
+
     // Guided Sessions Configuration
     const GUIDED_TOPICS = {
         investments: [
@@ -141,12 +145,33 @@ export default function ChatInterface() {
         ]
     };
 
+    // Load guided questions (either hardcoded or from API)
+    useEffect(() => {
+        const topic = searchParams.get('topic');
+        if (!topic) return;
+
+        if (GUIDED_TOPICS[topic]) {
+            setGuidedQuestions(GUIDED_TOPICS[topic]);
+        } else {
+            // Assume it's a custom session ID
+            apiRequest(`/api/guided-sessions/${topic}`)
+                .then(res => {
+                    if (res.ok) return res.json();
+                    throw new Error('Failed to load guided session');
+                })
+                .then(data => {
+                    if (data && data.questions) {
+                        setGuidedQuestions(data.questions);
+                    }
+                })
+                .catch(err => console.error(err));
+        }
+    }, [searchParams]);
+
     // Auto-play guided questions
     useEffect(() => {
         const topic = searchParams.get('topic');
-        const questions = GUIDED_TOPICS[topic];
-
-        if (!topic || !questions || mutation.isPending) return;
+        if (!topic || guidedQuestions.length === 0 || mutation.isPending) return;
 
         // Check if we should send the next question
         const userMessages = messages.filter(m => m.role === 'user');
@@ -157,8 +182,8 @@ export default function ChatInterface() {
         // 2. Last message was from assistant (previous answer complete)
         const shouldSendNext = messages.length === 0 || (lastMessage && lastMessage.role === 'assistant');
 
-        if (shouldSendNext && userMessages.length < questions.length) {
-            const nextQuestion = questions[userMessages.length];
+        if (shouldSendNext && userMessages.length < guidedQuestions.length) {
+            const nextQuestion = guidedQuestions[userMessages.length];
 
             // Small delay for natural feel
             const timer = setTimeout(() => {
@@ -167,7 +192,7 @@ export default function ChatInterface() {
 
             return () => clearTimeout(timer);
         }
-    }, [messages, searchParams, mutation.isPending]);
+    }, [messages, searchParams, guidedQuestions, mutation.isPending]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -216,6 +241,19 @@ export default function ChatInterface() {
 
     return (
         <div className="flex flex-col h-full bg-background relative">
+            {/* Toolbar */}
+            {messages.length > 0 && (
+                <div className="absolute top-4 right-4 z-10">
+                    <button
+                        onClick={() => setShowSaveModal(true)}
+                        className="p-2 bg-background/80 backdrop-blur border border-border rounded-lg shadow-sm hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
+                        title="Save conversation as Guided Session"
+                    >
+                        <Save className="w-4 h-4" />
+                    </button>
+                </div>
+            )}
+
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth" ref={scrollRef}>
                 {messages.length === 0 && (
@@ -302,6 +340,18 @@ export default function ChatInterface() {
                     </button>
                 </form>
             </div>
+
+            {/* Save as Guided Session Modal */}
+            {showSaveModal && (
+                <GuidedSessionEditor
+                    initialQuestions={messages.filter(m => m.role === 'user').map(m => m.content)}
+                    onClose={() => setShowSaveModal(false)}
+                    onSave={() => {
+                        // Just close, maybe show toast
+                        setShowSaveModal(false);
+                    }}
+                />
+            )}
         </div>
     );
 }
