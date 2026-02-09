@@ -133,6 +133,42 @@ export default function ChatInterface() {
         }
     }, [messages]);
 
+    // Guided Sessions Configuration
+    const GUIDED_TOPICS = {
+        investments: [
+            "What is the company experience as investment bank?",
+            "What are types of investment funds available?"
+        ]
+    };
+
+    // Auto-play guided questions
+    useEffect(() => {
+        const topic = searchParams.get('topic');
+        const questions = GUIDED_TOPICS[topic];
+
+        if (!topic || !questions || mutation.isPending) return;
+
+        // Check if we should send the next question
+        const userMessages = messages.filter(m => m.role === 'user');
+        const lastMessage = messages[messages.length - 1];
+
+        // Conditions to send next message:
+        // 1. No messages yet (start of session)
+        // 2. Last message was from assistant (previous answer complete)
+        const shouldSendNext = messages.length === 0 || (lastMessage && lastMessage.role === 'assistant');
+
+        if (shouldSendNext && userMessages.length < questions.length) {
+            const nextQuestion = questions[userMessages.length];
+
+            // Small delay for natural feel
+            const timer = setTimeout(() => {
+                mutation.mutate(nextQuestion);
+            }, 1000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [messages, searchParams, mutation.isPending]);
+
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!input.trim() || mutation.isPending) return;

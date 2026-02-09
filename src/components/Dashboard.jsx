@@ -57,6 +57,24 @@ export default function Dashboard() {
         }
     }
 
+    async function createGuidedSession(topic) {
+        try {
+            const title = topic === 'investments' ? 'VC Exploration' : 'Guided Session';
+            const res = await apiRequest('/api/sessions', {
+                method: 'POST',
+                body: JSON.stringify({ title }),
+            });
+
+            if (res.ok) {
+                const session = await res.json();
+                // Navigate to new session with topic param
+                setSearchParams({ session: session.id, topic });
+            }
+        } catch (error) {
+            console.error('Failed to create guided session:', error);
+        }
+    }
+
     function formatTokens(tokens) {
         if (tokens >= 1000000) return `${(tokens / 1000000).toFixed(1)}M`;
         if (tokens >= 1000) return `${(tokens / 1000).toFixed(1)}K`;
@@ -85,6 +103,27 @@ export default function Dashboard() {
                 <p className="text-muted-foreground mt-2">
                     custom workflows for AI powered business
                 </p>
+            </div>
+
+            {/* Explore Topics */}
+            <div className="space-y-4">
+                <h2 className="text-xl font-semibold">Explore Topics</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                        onClick={() => createGuidedSession('investments')}
+                        className="p-4 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-muted/50 transition-all text-left flex items-start gap-3 group"
+                    >
+                        <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
+                            <Zap className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h3 className="font-medium group-hover:text-primary transition-colors">Venture Capital</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                                Guided exploration of investment banking experience and available funds.
+                            </p>
+                        </div>
+                    </button>
+                </div>
             </div>
 
             {/* Session History */}
