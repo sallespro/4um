@@ -36,8 +36,8 @@ export default function Dashboard() {
     }
 
     async function deleteSession(e, id) {
+        e.preventDefault();
         e.stopPropagation();
-        if (!confirm('Are you sure you want to delete this session?')) return;
 
         try {
             const res = await apiRequest(`/api/sessions/${id}`, {
@@ -110,14 +110,16 @@ export default function Dashboard() {
                         {sessions.slice(0, 10).map((session) => (
                             <div
                                 key={session.id}
-                                onClick={() => setSearchParams({ session: session.id })}
                                 className={cn(
-                                    "w-full group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all text-left cursor-pointer",
+                                    "w-full group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all text-left relative",
                                     searchParams.get('session') === session.id && "border-primary bg-primary/5"
                                 )}
                             >
-                                <div className="flex items-center justify-between">
-                                    <div className="flex-1 min-w-0">
+                                <div
+                                    className="flex items-center justify-between cursor-pointer"
+                                    onClick={() => setSearchParams({ session: session.id })}
+                                >
+                                    <div className="flex-1 min-w-0 pr-12">
                                         <h3 className="font-medium truncate">{session.title}</h3>
                                         <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
                                             <span className="flex items-center gap-1">
@@ -130,17 +132,16 @@ export default function Dashboard() {
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={(e) => deleteSession(e, session.id)}
-                                            className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
-                                            title="Delete session"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                        <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </div>
+                                <button
+                                    type="button"
+                                    onClick={(e) => deleteSession(e, session.id)}
+                                    className="absolute right-14 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 z-10"
+                                    title="Delete session"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                         ))}
                     </div>
