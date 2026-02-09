@@ -1,5 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
+import chokidar from 'chokidar';
 import { generateEmbeddings, computeSimilarities, initializeEmbeddings } from './embeddings.js';
 
 // In-memory store for document chunks and embeddings
@@ -7,10 +8,6 @@ let documentIndex = [];
 
 /**
  * Chunk text into smaller pieces
- * @param {string} text - Text to chunk
- * @param {number} chunkSize - Maximum characters per chunk
- * @param {number} overlap - Overlap between chunks
- * @returns {string[]} - Array of chunks
  */
 function chunkText(text, chunkSize = 500, overlap = 100) {
     const chunks = [];
@@ -27,8 +24,34 @@ function chunkText(text, chunkSize = 500, overlap = 100) {
 }
 
 /**
+ * Re-index a single file
+ */
+async function indexFile(pagesDir, filename) {
+    try {
+        const filePath = path.join(pagesDir, filename);
+        const content = await fs.readFile(filePath, 'utf-8');
+        const chunks = chunkText(content);
+
+        // Remove old chunks for this file
+        documentIndex = documentIndex.filter(doc => doc.file !== filename);
+
+        // Add new chunks
+        for (const chunk of chunks) {
+            const [embedding] = await generateEmbeddings(chunk, 'document');
+            documentIndex.push({
+                file: filename,
+                content: chunk,
+                embedding,
+            });
+        }
+        console.log(`  ✓ Indexed ${filename} (${chunks.length} chunks)`);
+    } catch (error) {
+        console.error(`  ✗ Failed to index ${filename}:`, error.message);
+    }
+}
+
+/**
  * Initialize RAG by indexing markdown files
- * @param {string} pagesDir - Path to the pages directory
  */
 export async function initializeRAG(pagesDir) {
     await initializeEmbeddings();
@@ -36,33 +59,56 @@ export async function initializeRAG(pagesDir) {
     const files = await fs.readdir(pagesDir);
     const mdFiles = files.filter(f => f.endsWith('.md'));
 
-    console.log(`📚 Indexing ${mdFiles.length} markdown files...`);
+    console.log(`📚 Initializing RAG: Indexing ${mdFiles.length} markdown files...`);
 
     for (const file of mdFiles) {
-        const filePath = path.join(pagesDir, file);
-        const content = await fs.readFile(filePath, 'utf-8');
-        const chunks = chunkText(content);
-
-        for (const chunk of chunks) {
-            const [embedding] = await generateEmbeddings(chunk, 'document');
-            documentIndex.push({
-                file,
-                content: chunk,
-                embedding,
-            });
-        }
-
-        console.log(`  ✓ Indexed ${file} (${chunks.length} chunks)`);
+        await indexFile(pagesDir, file);
     }
 
-    console.log(`✅ Indexed ${documentIndex.length} total chunks`);
+    console.log(`✅ Initial indexing complete: ${documentIndex.length} total chunks`);
+}
+
+/**
+ * Watch pages directory for changes and update index
+ */
+export function watchPages(pagesDir) {
+    const watcher = chokidar.watch(pagesDir, {
+        ignored: /(^|[\/\\])\../, // ignore dotfiles
+        persistent: true,
+        ignoreInitial: true // we already did initial indexing
+    });
+
+    console.log(`👁️  Watching for changes in ${pagesDir}...`);
+
+    watcher
+        .on('add', filename => {
+            const base = path.basename(filename);
+            if (base.endsWith('.md')) {
+                console.log(`📄 File added: ${base}, re-indexing...`);
+                indexFile(pagesDir, base);
+            }
+        })
+        .on('change', filename => {
+            const base = path.basename(filename);
+            if (base.endsWith('.md')) {
+                console.log(`✏️  File changed: ${base}, updating index...`);
+                indexFile(pagesDir, base);
+            }
+        })
+        .on('unlink', filename => {
+            const base = path.basename(filename);
+            if (base.endsWith('.md')) {
+                console.log(`🗑️  File removed: ${base}, removing from index...`);
+                documentIndex = documentIndex.filter(doc => doc.file !== base);
+                console.log(`  ✓ Removed ${base}. Total chunks: ${documentIndex.length}`);
+            }
+        });
+
+    return watcher;
 }
 
 /**
  * Search for relevant documents
- * @param {string} query - Search query
- * @param {number} topK - Number of results to return
- * @returns {Promise<Array>} - Ranked results
  */
 export async function searchDocuments(query, topK = 3) {
     if (documentIndex.length === 0) {
@@ -88,8 +134,6 @@ export async function searchDocuments(query, topK = 3) {
 
 /**
  * Get context for a chat query
- * @param {string} query - User's message
- * @returns {Promise<string>} - Context string
  */
 export async function getRAGContext(query) {
     const results = await searchDocuments(query, 3);
@@ -103,4 +147,4 @@ export async function getRAGContext(query) {
         .join('\n\n');
 }
 
-export default { initializeRAG, searchDocuments, getRAGContext };
+export default { initializeRAG, watchPages, searchDocuments, getRAGContext };

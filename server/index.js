@@ -15,7 +15,7 @@ import webhooksRouter from './routes/webhooks.js';
 import { authMiddleware } from './middleware/auth.js';
 
 // Services
-import { initializeRAG } from './services/rag.js';
+import { initializeRAG, watchPages } from './services/rag.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -53,9 +53,13 @@ if (process.env.NODE_ENV === 'production') {
 
 // Initialize RAG and start server
 async function startServer() {
+    const pagesDir = path.join(__dirname, '../pages');
     console.log('🚀 Initializing RAG system...');
-    await initializeRAG(path.join(__dirname, '../pages'));
+    await initializeRAG(pagesDir);
     console.log('✅ RAG system initialized');
+
+    // Start watching for changes
+    watchPages(pagesDir);
 
     app.listen(PORT, () => {
         console.log(`🌐 Server running at http://localhost:${PORT}`);
