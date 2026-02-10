@@ -72,6 +72,7 @@ const CORPORATE_TEMPLATE = (content, title, userEmail) => `
 export async function generatePDF(resultContent, title, filename, userEmail) {
     const browser = await puppeteer.launch({
         headless: 'new',
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
     const page = await browser.newPage();
