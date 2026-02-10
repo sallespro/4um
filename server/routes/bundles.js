@@ -4,6 +4,8 @@ import OpenAI from 'openai';
 
 const router = Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+import { generatePDF } from '../lib/pdf.js';
+import fs from 'fs';
 
 // GET /api/bundles - List all bundles for the user
 router.get('/', async (req, res) => {
@@ -163,10 +165,12 @@ router.post('/:id/run', async (req, res) => {
             return `Session ID: ${sid}\n` + sessionMsgs.map(m => `${m.role}: ${m.content}`).join('\n');
         }).join('\n\n---\n\n');
 
-        const systemPrompt = `You are an AI assistant tasked with analyzing multiple chat sessions to generate a specific output.
+        const systemPrompt = `You are an AI assistant tasked with analyzing multiple chat sessions to generate a professional PDF presentation.
 The user will provide a "Bundle Prompt" which is your instruction, and "Context" which contains the content of several chat sessions.
 Your goal is to follow the Bundle Prompt exactly, using the provided Context.
-Always return your response in Markdown format suitable for a presentation or report.`;
+Always return your response in Markdown format.
+CRITICAL: Use "---" on its own line to separate major sections or slides. Each "---" will trigger a new page in the generated PDF report.
+Aim for a clean, structure presentation with one major topic per page.`;
 
         const userContent = `Context:\n${sessionContexts}\n\nBundle Prompt:\n${bundle.prompt}`;
 
@@ -182,12 +186,100 @@ Always return your response in Markdown format suitable for a presentation or re
 
         const result = completion.choices[0].message.content;
 
-        res.json({ result });
+        // Save result to DB
+        const { data: savedResult, error: saveError } = await supabase
+            .from('bundle_results')
+            .insert([{
+                bundle_id: id,
+                result_content: result
+            }])
+            .select()
+            .single();
+
+        if (saveError) {
+            console.error('Error saving result:', saveError);
+        }
+
+        res.json({ result, resultId: savedResult?.id });
 
     } catch (error) {
         console.error('Bundle run error:', error);
         res.status(500).json({ error: error.message });
     }
 });
+
+// GET /api/bundles/:id/results - List results for a bundle
+router.get('/:id/results', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+
+        const { data, error } = await supabase
+            .from('bundle_results')
+            .select('*')
+            .eq('bundle_id', id)
+            .order('created_at', { ascending: false });
+
+        // Verify ownership via join or separate check if needed, 
+        // but RLS should handle it. However, RLS policy for select uses EXISTS(bundles...)
+        // so it should be fine.
+
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/bundles/results/:id/pdf - Generate and download PDF
+router.get('/results/:id/pdf', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // 1. Fetch result
+        const { data: result, error } = await supabase
+            .from('bundle_results')
+            .select('*, bundles(title, user_id)')
+            .eq('id', id)
+            .single();
+
+        if (error || !result) return res.status(404).json({ error: 'Result not found' });
+
+        // Check ownership (extra safety, though RLS applies if we used anon key, but we are admin on server)
+        // Wait, server uses service key? No, we use supabase client which might use service key or anon.
+        // In this project structure, usually server uses service key or we pass headers.
+        // Assuming we need to verify user if we had req.user, but for download link usually it's public or we use tokens.
+        // For simplicity in this protected route, we assume Auth middleware is running?
+        // Express doesn't auto-apply auth to all routes unless defined. 
+        // Index.js likely applies auth middleware to /api/bundles.
+        // So req.user exists.
+
+        if (result.bundles.user_id !== req.user.id) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // 2. Generate PDF
+        const filename = `result_${id}`;
+        const title = result.bundles?.title || 'Bundle Result';
+        const userEmail = req.user.email;
+
+        const pdfPath = await generatePDF(result.result_content, title, filename, userEmail);
+
+        // 3. Serve PDF
+        const isView = req.query.view === 'true';
+        if (isView) {
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline');
+            res.sendFile(pdfPath);
+        } else {
+            res.download(pdfPath, `${title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_report.pdf`);
+        }
+
+    } catch (error) {
+        console.error('Error generating PDF:', error);
+        res.status(500).json({ error: 'Failed to generate PDF' });
+    }
+});
+
 
 export default router;

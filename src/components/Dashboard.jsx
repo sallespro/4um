@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Clock, Zap, ArrowRight, Loader2, Trash2, Edit, Plus } from 'lucide-react';
+import { MessageSquare, Clock, Zap, ArrowRight, Loader2, Trash2, Edit, Plus, Boxes, Play, FileText, Download, X } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import GuidedSessionEditor from './GuidedSessionEditor';
 import BundleEditor from './BundleEditor';
+import BundleResults from './BundleResults';
 
 export default function Dashboard() {
     const [searchParams, setSearchParams] = useSearchParams();
@@ -21,7 +22,7 @@ export default function Dashboard() {
     const [showBundleEditor, setShowBundleEditor] = useState(false);
     const [editingBundle, setEditingBundle] = useState(null);
     const [runningBundleId, setRunningBundleId] = useState(null);
-    const [bundleResult, setBundleResult] = useState(null);
+    const [bundleResultData, setBundleResultData] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -89,8 +90,6 @@ export default function Dashboard() {
         e.preventDefault();
         e.stopPropagation();
 
-        if (!confirm('Are you sure you want to delete this guided session template?')) return;
-
         try {
             const res = await apiRequest(`/api/guided-sessions/${id}`, {
                 method: 'DELETE'
@@ -124,7 +123,6 @@ export default function Dashboard() {
     const handleDeleteBundle = async (e, id) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!confirm('Are you sure you want to delete this bundle?')) return;
 
         try {
             const res = await apiRequest(`/api/bundles/${id}`, { method: 'DELETE' });
@@ -146,7 +144,7 @@ export default function Dashboard() {
             const res = await apiRequest(`/api/bundles/${id}/run`, { method: 'POST' });
             if (res.ok) {
                 const data = await res.json();
-                setBundleResult(data.result);
+                setBundleResultData({ content: data.result, id: data.resultId });
             } else {
                 const err = await res.json();
                 alert('Failed to run bundle: ' + (err.error || 'Unknown error'));
@@ -266,7 +264,7 @@ export default function Dashboard() {
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                                            <Zap className="w-5 h-5" />
+                                            <Boxes className="w-5 h-5" />
                                         </div>
                                         <div>
                                             <h3 className="font-medium">{bundle.title}</h3>
@@ -276,6 +274,18 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                     <div className="flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={(e) => handleRunBundle(e, bundle.id)}
+                                            disabled={runningBundleId === bundle.id}
+                                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                            title="Run Bundle"
+                                        >
+                                            {runningBundleId === bundle.id ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Play className="w-4 h-4 fill-current" />
+                                            )}
+                                        </button>
                                         <button
                                             onClick={(e) => handleEditBundle(e, bundle)}
                                             className="p-2 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg transition-colors"
@@ -293,27 +303,7 @@ export default function Dashboard() {
                                     </div>
                                 </div>
 
-                                <p className="text-sm text-muted-foreground line-clamp-2 bg-muted/30 p-2 rounded-md font-mono text-xs">
-                                    {bundle.prompt}
-                                </p>
-
-                                <button
-                                    onClick={(e) => handleRunBundle(e, bundle.id)}
-                                    disabled={runningBundleId === bundle.id}
-                                    className="mt-auto w-full flex items-center justify-center gap-2 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-70"
-                                >
-                                    {runningBundleId === bundle.id ? (
-                                        <>
-                                            <Loader2 className="w-4 h-4 animate-spin" />
-                                            Generating...
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Zap className="w-4 h-4" />
-                                            Run Bundle
-                                        </>
-                                    )}
-                                </button>
+                                <BundleResults bundleId={bundle.id} />
                             </div>
                         ))}
                     </div>
@@ -409,28 +399,59 @@ export default function Dashboard() {
                 />
             )}
 
-            {bundleResult && (
+            {bundleResultData && (
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                     <div className="w-full max-w-4xl bg-card border border-border rounded-xl shadow-lg flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between p-6 border-b border-border">
                             <h2 className="text-xl font-semibold">Bundle Result</h2>
-                            <button
-                                onClick={() => setBundleResult(null)}
-                                className="p-2 hover:bg-muted rounded-lg transition-colors"
-                            >
-                                <span className="sr-only">Close</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x w-5 h-5"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {bundleResultData.id && (
+                                    <button
+                                        onClick={async () => {
+                                            // Optional: Create PDF and download directly
+                                            try {
+                                                const response = await apiRequest(`/api/bundles/results/${bundleResultData.id}/pdf`);
+                                                if (!response.ok) throw new Error('Download failed');
+                                                const blob = await response.blob();
+                                                const url = window.URL.createObjectURL(blob);
+                                                const a = document.createElement('a');
+                                                a.href = url;
+                                                a.download = `report_${bundleResultData.id.slice(0, 8)}.pdf`;
+                                                document.body.appendChild(a);
+                                                a.click();
+                                                window.URL.revokeObjectURL(url);
+                                                document.body.removeChild(a);
+                                            } catch (err) {
+                                                console.error('PDF creation failed:', err);
+                                                alert('Failed to generate PDF');
+                                            }
+                                        }}
+                                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
+                                        title="Generate PDF Report"
+                                    >
+                                        <FileText className="w-4 h-4" />
+                                        <span>Create PDF</span>
+                                    </button>
+                                )}
+                                <button
+                                    onClick={() => setBundleResultData(null)}
+                                    className="p-2 hover:bg-muted rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-8">
-                            <article className="prose dark:prose-invert max-w-none prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground">
-                                <ReactMarkdown>{bundleResult}</ReactMarkdown>
-                            </article>
+                        <div className="flex-1 overflow-y-auto p-8 bg-muted/5">
+                            <div className="max-w-none prose dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-pre:bg-transparent prose-pre:p-0 prose-pre:m-0 prose-code:text-primary">
+                                <ReactMarkdown>
+                                    {bundleResultData.content?.replace(/^```markdown\n|```$/g, '') || ''}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                         <div className="p-6 border-t border-border flex justify-end">
                             <button
-                                onClick={() => setBundleResult(null)}
-                                className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors"
+                                onClick={() => setBundleResultData(null)}
+                                className="px-6 py-2 bg-primary text-primary-foreground font-medium rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                             >
                                 Close
                             </button>
