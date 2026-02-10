@@ -76,9 +76,13 @@ export async function generatePDF(resultContent, title, filename, userEmail) {
     });
     const page = await browser.newPage();
 
+    // Clean up potential markdown code blocks from the AI response
+    // ensuring we don't treat the entire content as a code block
+    const cleanContent = resultContent.replace(/^```markdown\s*/i, '').replace(/\s*```$/, '');
+
     // Render markdown to HTML server-side
     // We'll split by "---" to create separate pages for a presentation feel
-    const sections = resultContent.split(/\n---\s*\n/);
+    const sections = cleanContent.split(/\n---\s*\n/);
 
     const pageHtml = sections.map((section, idx) => {
         const html = marked.parse(section);
