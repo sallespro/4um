@@ -7,9 +7,14 @@ import AuthModal from './AuthModal';
 import ChatInterface from './ChatInterface';
 
 const navItems = [
-    { icon: FileText, label: 'Start', to: '/pages/start' },
-    { icon: FileText, label: 'Steps', to: '/pages/steps' },
-    { icon: FileText, label: 'Content', to: '/pages/content' },
+    { icon: FileText, label: 'Visão Geral', to: '/pages/1 - visão geral' },
+    { icon: FileText, label: 'Origem do Programa', to: '/pages/2 - origem do programa' },
+    { icon: FileText, label: 'Participantes', to: '/pages/3 - participantes' },
+    { icon: FileText, label: 'Serviços', to: '/pages/4 - serviços' },
+    { icon: FileText, label: 'Conteúdo', to: '/pages/5 - conteúdo' },
+    { icon: FileText, label: 'CloudPilot', to: '/pages/6 - cloudpilot' },
+    { icon: FileText, label: 'Resultados', to: '/pages/7 - resultados' },
+    { icon: FileText, label: 'Reference', to: '/pages/reference' },
 ];
 
 export default function Layout() {
