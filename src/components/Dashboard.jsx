@@ -158,12 +158,6 @@ export default function Dashboard() {
     };
 
     async function createGuidedSession(topicOrId) {
-        // If it's the hardcoded 'investments' topic
-        if (topicOrId === 'investments') {
-            await startSession('VC Exploration', 'investments');
-            return;
-        }
-
         // It's a custom guided session ID
         const guidedSession = guidedSessions.find(gs => gs.id === topicOrId);
         if (guidedSession) {
@@ -237,7 +231,7 @@ export default function Dashboard() {
             {/* Bundles Section */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold">Bundles</h2>
+                    <h2 className="text-xl font-semibold">Apresentações</h2>
                     <button
                         onClick={() => {
                             setEditingBundle(null);
@@ -313,7 +307,7 @@ export default function Dashboard() {
             {/* Explore Topics */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold">Explore Topics</h2>
+                    <h2 className="text-xl font-semibold">Perguntas</h2>
                     <button
                         onClick={() => {
                             setEditingSession(null);
@@ -327,22 +321,6 @@ export default function Dashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Built-in VC Session */}
-                    <button
-                        onClick={() => createGuidedSession('investments')}
-                        className="p-4 rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-muted/50 transition-all text-left flex items-start gap-3 group relative"
-                    >
-                        <div className="p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary/20 transition-colors">
-                            <Zap className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="font-medium group-hover:text-primary transition-colors">Venture Capital</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                                Guided exploration of investment banking experience and available funds.
-                            </p>
-                        </div>
-                    </button>
-
                     {/* Custom Guided Sessions */}
                     {guidedSessions.map(gs => (
                         <button
@@ -403,7 +381,7 @@ export default function Dashboard() {
                 <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                     <div className="w-full max-w-4xl bg-card border border-border rounded-xl shadow-lg flex flex-col max-h-[90vh]">
                         <div className="flex items-center justify-between p-6 border-b border-border">
-                            <h2 className="text-xl font-semibold">Bundle Result</h2>
+                            <h2 className="text-xl font-semibold">Apresentação</h2>
                             <div className="flex items-center gap-2">
                                 {bundleResultData.id && (
                                     <button
@@ -463,7 +441,7 @@ export default function Dashboard() {
             {/* Session History */}
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold">Sessions</h2>
+                    <h2 className="text-xl font-semibold">Conversas</h2>
                 </div>
 
                 {loading ? (

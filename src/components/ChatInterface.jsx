@@ -137,35 +137,24 @@ export default function ChatInterface() {
     const [guidedQuestions, setGuidedQuestions] = useState([]);
     const [showSaveModal, setShowSaveModal] = useState(false);
 
-    // Guided Sessions Configuration
-    const GUIDED_TOPICS = {
-        investments: [
-            "What is the company experience as investment bank?",
-            "What are types of investment funds available?"
-        ]
-    };
 
-    // Load guided questions (either hardcoded or from API)
+    // Load guided questions from API
     useEffect(() => {
         const topic = searchParams.get('topic');
         if (!topic) return;
 
-        if (GUIDED_TOPICS[topic]) {
-            setGuidedQuestions(GUIDED_TOPICS[topic]);
-        } else {
-            // Assume it's a custom session ID
-            apiRequest(`/api/guided-sessions/${topic}`)
-                .then(res => {
-                    if (res.ok) return res.json();
-                    throw new Error('Failed to load guided session');
-                })
-                .then(data => {
-                    if (data && data.questions) {
-                        setGuidedQuestions(data.questions);
-                    }
-                })
-                .catch(err => console.error(err));
-        }
+        // Assume it's a custom session ID
+        apiRequest(`/api/guided-sessions/${topic}`)
+            .then(res => {
+                if (res.ok) return res.json();
+                throw new Error('Failed to load guided session');
+            })
+            .then(data => {
+                if (data && data.questions) {
+                    setGuidedQuestions(data.questions);
+                }
+            })
+            .catch(err => console.error(err));
     }, [searchParams]);
 
     // Auto-play guided questions

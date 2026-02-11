@@ -5,3 +5,7 @@
 [ OpenAI - February 5, 2026 - Introducing OpenAI Frontier](https://openai.com/index/introducing-openai-frontier/)
 
 [ 25 May 2025 - GenAI’s adoption puzzle](https://www.ben-evans.com/benedictevans/2025/5/25/genais-adoption-puzzle)
+
+## tools & demos
+
+[Real-time neural text-to-speech with voice cloning, running entirely in your browser](https://huggingface.co/spaces/KevinAHM/pocket-tts-web)
