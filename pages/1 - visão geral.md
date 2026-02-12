@@ -1,5 +1,8 @@
 
-# Inteligência Artificial para Transformação Empresarial
+# AI Studio 
+> expertise, tools and action
+
+Inteligência Artificial para empresas
 
 O programa AI Studio reúne serviços de profissionais de **consultoria e engenharia de sw**  com as ferramentas para realização de **projetos de IA**. 
 

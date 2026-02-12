@@ -79,11 +79,23 @@ export async function generatePDF(resultContent, title, filename, userEmail) {
 
     // Clean up potential markdown code blocks from the AI response
     // ensuring we don't treat the entire content as a code block
-    const cleanContent = resultContent.replace(/^```markdown\s*/i, '').replace(/\s*```$/, '');
+    let cleanContent = resultContent.trim();
+
+    // Remove triple-backtick wrappers if they exist (common with AI)
+    // Using a more robust approach that handles leading/trailing whitespace
+    cleanContent = cleanContent
+        .replace(/^```markdown\s*/i, '')
+        .replace(/^```\s*/, '')
+        .replace(/\s*```$/, '')
+        .trim();
 
     // Render markdown to HTML server-side
     // We'll split by "---" to create separate pages for a presentation feel
-    const sections = cleanContent.split(/\n---\s*\n/);
+    // Filter out empty or whitespace-only sections
+    const sections = cleanContent
+        .split(/\n---\s*\n/)
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
 
     const pageHtml = sections.map((section, idx) => {
         const html = marked.parse(section);

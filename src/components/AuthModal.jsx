@@ -32,8 +32,8 @@ export default function AuthModal({ onSuccess }) {
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-4">
                         <Sparkles className="w-8 h-8 text-primary" />
                     </div>
-                    <h1 className="text-2xl font-bold text-foreground">Welcome to CloudPilot</h1>
-                    <p className="text-muted-foreground mt-2">Enter your email to continue</p>
+                    <h1 className="text-2xl font-bold text-foreground">cloudpilot</h1>
+                    <p className="text-muted-foreground mt-2">Entre com seu e-mail</p>
                 </div>
 
                 {/* Form */}
@@ -75,7 +75,7 @@ export default function AuthModal({ onSuccess }) {
 
                 {/* Footer */}
                 <p className="text-center text-muted-foreground/60 text-sm mt-6">
-                    By continuing, you agree to use CloudPilot responsibly.
+                    Ao continuar, você concorda em usar o Cloudpilot de forma responsável.
                 </p>
             </div>
         </div>

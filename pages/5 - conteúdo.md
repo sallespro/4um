@@ -10,6 +10,7 @@
 - Orquestração
 - Fluxos de Trabalho
 - Integração de Agentes
+- Agentes Autônomos
 - MCP
 - Sandboxing
 - Verificações de Segurança
