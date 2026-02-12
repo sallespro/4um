@@ -10,11 +10,12 @@
 [1] > cloudpilot@0.0.0 dev:server
 [1] > node server/index.js
 [1] 
-[0] 6:49:29 PM [vite] (client) Re-optimizing dependencies because lockfile has changed
+[0] Port 5173 is in use, trying another one...
+[0] Port 5174 is in use, trying another one...
 [0] 
-[0]   VITE v7.3.1  ready in 201 ms
+[0]   VITE v7.3.1  ready in 157 ms
 [0] 
-[0]   ➜  Local:   http://localhost:5173/
+[0]   ➜  Local:   http://localhost:5175/
 [0]   ➜  Network: use --host to expose
 [1] 🚀 Initializing RAG system...
 [1] 📦 Loading embedding model...
@@ -32,6 +33,3 @@
 [1] ✅ RAG system initialized
 [1] 👁️  Watching for changes in /Users/rrocsal/Documents/dev/code/ai/cloudpilot/pages...
 [1] 🌐 Server running at http://localhost:3001
-[0] 7:23:08 PM [vite] (client) hmr update /src/index.css
-[0] 7:23:10 PM [vite] (client) hmr update /src/index.css
-[1] npm run dev:server exited with code SIGTERM

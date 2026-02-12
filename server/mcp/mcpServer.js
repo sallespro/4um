@@ -22,9 +22,17 @@ export function createMcpServer() {
         'Ask CloudPilot AI one or more questions. Requires the user email and an array of questions. Creates a session and returns answers for each question.',
         {
             email: z.string().email().describe('User email address (must exist in the system)'),
-            questions: z.array(z.string()).min(1).describe('Array of questions to ask CloudPilot'),
+            questions: z.string().describe('One or more questions separated by commas'),
         },
-        async ({ email, questions }) => {
+        async ({ email, questions: rawQuestions }) => {
+            // Parse comma-separated questions
+            const questions = rawQuestions.split(',').map(q => q.trim()).filter(q => q.length > 0);
+            if (questions.length === 0) {
+                return {
+                    content: [{ type: 'text', text: 'Error: No valid questions provided.' }],
+                    isError: true,
+                };
+            }
             // 1. Resolve user by email
             const { data: user, error: userError } = await supabase
                 .from('users')

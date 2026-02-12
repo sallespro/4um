@@ -35,10 +35,7 @@ async function test() {
         name: 'ask',
         arguments: {
             email: TEST_EMAIL,
-            questions: [
-                'What is CloudPilot and what can it do?',
-                'How does the bundle feature work?'
-            ],
+            questions: 'What is CloudPilot and what can it do?, How does the bundle feature work?',
         },
     });
 
