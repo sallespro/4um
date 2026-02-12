@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Clock, Zap, ArrowRight, Loader2, Trash2, Edit, Plus, Boxes, Play, FileText, Download, X } from 'lucide-react';
+import { MessageSquare, Clock, Zap, ArrowRight, Loader2, Trash2, Edit, Plus, Boxes, Play, FileText, Download, X, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,8 @@ export default function Dashboard() {
     const [editingBundle, setEditingBundle] = useState(null);
     const [runningBundleId, setRunningBundleId] = useState(null);
     const [bundleResultData, setBundleResultData] = useState(null);
+    const [sendingEmailId, setSendingEmailId] = useState(null);
+    const [emailStatus, setEmailStatus] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -154,6 +156,36 @@ export default function Dashboard() {
             alert('Failed to run bundle');
         } finally {
             setRunningBundleId(null);
+        }
+    };
+
+    const handleSendEmailForModal = async (e, resultId) => {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        setSendingEmailId(resultId);
+        setEmailStatus(null);
+
+        try {
+            const response = await apiRequest(`/api/bundles/results/${resultId}/email`, {
+                method: 'POST'
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to send email');
+            }
+
+            setEmailStatus({ type: 'success', message: 'E-mail enviado com sucesso!' });
+            setTimeout(() => setEmailStatus(null), 3000);
+
+        } catch (err) {
+            console.error('Email send failed:', err);
+            setEmailStatus({ type: 'error', message: err.message || 'Falha ao enviar e-mail' });
+            setTimeout(() => setEmailStatus(null), 4000);
+        } finally {
+            setSendingEmailId(null);
         }
     };
 
@@ -384,32 +416,47 @@ export default function Dashboard() {
                             <h2 className="text-xl font-semibold">Apresentação</h2>
                             <div className="flex items-center gap-2">
                                 {bundleResultData.id && (
-                                    <button
-                                        onClick={async () => {
-                                            // Optional: Create PDF and download directly
-                                            try {
-                                                const response = await apiRequest(`/api/bundles/results/${bundleResultData.id}/pdf`);
-                                                if (!response.ok) throw new Error('Download failed');
-                                                const blob = await response.blob();
-                                                const url = window.URL.createObjectURL(blob);
-                                                const a = document.createElement('a');
-                                                a.href = url;
-                                                a.download = `report_${bundleResultData.id.slice(0, 8)}.pdf`;
-                                                document.body.appendChild(a);
-                                                a.click();
-                                                window.URL.revokeObjectURL(url);
-                                                document.body.removeChild(a);
-                                            } catch (err) {
-                                                console.error('PDF creation failed:', err);
-                                                alert('Failed to generate PDF');
-                                            }
-                                        }}
-                                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
-                                        title="Generate PDF Report"
-                                    >
-                                        <FileText className="w-4 h-4" />
-                                        <span>Create PDF</span>
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            onClick={(e) => handleSendEmailForModal(e, bundleResultData.id)}
+                                            disabled={sendingEmailId === bundleResultData.id}
+                                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors border border-primary/20 disabled:opacity-50"
+                                            title="Send via Email"
+                                        >
+                                            {sendingEmailId === bundleResultData.id ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Mail className="w-4 h-4" />
+                                            )}
+                                            <span>Email</span>
+                                        </button>
+                                        <button
+                                            onClick={async () => {
+                                                // Optional: Create PDF and download directly
+                                                try {
+                                                    const response = await apiRequest(`/api/bundles/results/${bundleResultData.id}/pdf`);
+                                                    if (!response.ok) throw new Error('Download failed');
+                                                    const blob = await response.blob();
+                                                    const url = window.URL.createObjectURL(blob);
+                                                    const a = document.createElement('a');
+                                                    a.href = url;
+                                                    a.download = `report_${bundleResultData.id.slice(0, 8)}.pdf`;
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    window.URL.revokeObjectURL(url);
+                                                    document.body.removeChild(a);
+                                                } catch (err) {
+                                                    console.error('PDF creation failed:', err);
+                                                    alert('Failed to generate PDF');
+                                                }
+                                            }}
+                                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 rounded-lg transition-colors border border-primary/20"
+                                            title="Generate PDF Report"
+                                        >
+                                            <FileText className="w-4 h-4" />
+                                            <span>Create PDF</span>
+                                        </button>
+                                    </div>
                                 )}
                                 <button
                                     onClick={() => setBundleResultData(null)}
@@ -425,6 +472,21 @@ export default function Dashboard() {
                                     {bundleResultData.content?.replace(/^```markdown\n|```$/g, '') || ''}
                                 </ReactMarkdown>
                             </div>
+
+                            {/* Status Toast Notification */}
+                            {emailStatus && (
+                                <div className={cn(
+                                    "fixed bottom-24 right-8 flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl text-sm font-medium animate-in fade-in slide-in-from-bottom-4 duration-300 z-[70]",
+                                    emailStatus.type === 'success' ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                                )}>
+                                    {emailStatus.type === 'success' ? (
+                                        <CheckCircle2 className="w-5 h-5" />
+                                    ) : (
+                                        <AlertCircle className="w-5 h-5" />
+                                    )}
+                                    {emailStatus.message}
+                                </div>
+                            )}
                         </div>
                         <div className="p-6 border-t border-border flex justify-end">
                             <button

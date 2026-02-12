@@ -1,0 +1,33 @@
+
+> cloudpilot@0.0.0 dev:all
+> concurrently "npm run dev" "npm run dev:server"
+
+[1] 
+[1] > cloudpilot@0.0.0 dev:server
+[1] > node server/index.js
+[1] 
+[0] 
+[0] > cloudpilot@0.0.0 dev
+[0] > vite
+[0] 
+[0] 
+[0]   VITE v7.3.1  ready in 183 ms
+[0] 
+[0]   ➜  Local:   http://localhost:5173/
+[0]   ➜  Network: use --host to expose
+[1] 🚀 Initializing RAG system...
+[1] 📦 Loading embedding model...
+[1] ✅ Embedding model loaded
+[1] 📚 Initializing RAG: Indexing 8 markdown files...
+[1]   ✓ Indexed 1 - visão geral.md (2 chunks)
+[1]   ✓ Indexed 2 - origem do programa.md (3 chunks)
+[1]   ✓ Indexed 3 - participantes.md (1 chunks)
+[1]   ✓ Indexed 4 - serviços.md (2 chunks)
+[1]   ✓ Indexed 5 - conteúdo.md (1 chunks)
+[1]   ✓ Indexed 6 - cloudpilot.md (2 chunks)
+[1]   ✓ Indexed 7 - resultados.md (1 chunks)
+[1]   ✓ Indexed reference.md (3 chunks)
+[1] ✅ Initial indexing complete: 15 total chunks
+[1] ✅ RAG system initialized
+[1] 👁️  Watching for changes in /Users/rrocsal/Documents/dev/code/ai/cloudpilot/pages...
+[1] 🌐 Server running at http://localhost:3001

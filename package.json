@@ -14,6 +14,8 @@
   },
   "dependencies": {
     "@huggingface/transformers": "^3.8.1",
+    "@react-email/components": "^1.0.7",
+    "@react-email/render": "^2.0.4",
     "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-query": "^5.90.20",
     "chokidar": "^5.0.0",
@@ -30,8 +32,10 @@
     "puppeteer": "^24.37.2",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-email": "^5.2.8",
     "react-markdown": "^10.1.0",
     "react-router-dom": "^7.13.0",
+    "resend": "^6.9.2",
     "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {

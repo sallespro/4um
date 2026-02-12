@@ -1,0 +1,49 @@
+
+> cloudpilot@0.0.0 dev:all
+> concurrently "npm run dev" "npm run dev:server"
+
+[1] 
+[1] > cloudpilot@0.0.0 dev:server
+[1] > node server/index.js
+[1] 
+[0] 
+[0] > cloudpilot@0.0.0 dev
+[0] > vite
+[0] 
+[0] 
+[0]   VITE v7.3.1  ready in 192 ms
+[0] 
+[0]   ➜  Local:   http://localhost:5173/
+[0]   ➜  Network: use --host to expose
+[1] 🚀 Initializing RAG system...
+[1] 📦 Loading embedding model...
+[1] ✅ Embedding model loaded
+[1] 📚 Initializing RAG: Indexing 8 markdown files...
+[1]   ✓ Indexed 1 - visão geral.md (2 chunks)
+[1]   ✓ Indexed 2 - origem do programa.md (3 chunks)
+[1]   ✓ Indexed 3 - participantes.md (1 chunks)
+[1]   ✓ Indexed 4 - serviços.md (2 chunks)
+[1]   ✓ Indexed 5 - conteúdo.md (1 chunks)
+[1]   ✓ Indexed 6 - cloudpilot.md (2 chunks)
+[1]   ✓ Indexed 7 - resultados.md (1 chunks)
+[1]   ✓ Indexed reference.md (3 chunks)
+[1] ✅ Initial indexing complete: 15 total chunks
+[1] ✅ RAG system initialized
+[1] 👁️  Watching for changes in /Users/rrocsal/Documents/dev/code/ai/cloudpilot/pages...
+[1] 🌐 Server running at http://localhost:3001
+[1] React does not recognize the `pX` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `px` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+[1] React does not recognize the `pY` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `py` instead. If you accidentally passed it from a parent component, remove it from the DOM element.
+[1] Resend error: {
+[1]   statusCode: 403,
+[1]   name: 'validation_error',
+[1]   message: 'You can only send testing emails to your own email address (cloud2pilot@gmail.com). To send emails to other recipients, please verify a domain at resend.com/domains, and change the `from` address to an email using this domain.'
+[1] }
+[0] 4:36:41 PM [vite] (client) hmr update /src/index.css
+[0] 4:42:49 PM [vite] (client) hmr update /src/index.css, /src/components/BundleResults.jsx
+[0] 4:52:48 PM [vite] (client) hmr update /src/index.css
+[0] 4:53:09 PM [vite] (client) hmr update /src/index.css
+[0] 4:53:21 PM [vite] (client) hmr update /src/index.css
+[0] 4:53:35 PM [vite] (client) hmr update /src/index.css
+[0] 4:53:50 PM [vite] (client) hmr update /src/index.css
+[0] npm run dev exited with code 143
+[1] npm run dev:server exited with code SIGTERM

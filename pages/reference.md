@@ -16,3 +16,5 @@
 [ 25 May 2025 - GenAI’s adoption puzzle](https://www.ben-evans.com/benedictevans/2025/5/25/genais-adoption-puzzle)
 
 [Building a C compiler with a team of parallel Claudes](https://www.anthropic.com/engineering/building-c-compiler)
+
+[GM Glootius Maximus, our inhouse tooling just grew up](https://www.reddit.com/r/ClaudeAI/comments/1r2sbif/gm_glootius_maximus_our_inhouse_tooling_just_grew/)

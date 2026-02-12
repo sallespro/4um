@@ -1,14 +1,19 @@
 import { Router } from 'express';
 import { supabase } from '../lib/supabase.js';
 import OpenAI from 'openai';
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.js';
 
 const router = Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 import { generatePDF } from '../lib/pdf.js';
 import fs from 'fs';
+import { resend } from '../lib/resend.js';
+import { render } from '@react-email/render';
+import { BundleEmail } from '../templates/BundleEmail.js';
+import React from 'react';
 
 // GET /api/bundles - List all bundles for the user
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
         const user = req.user;
         const { data, error } = await supabase
@@ -26,7 +31,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/bundles - Create a new bundle
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
     try {
         const { title, prompt, target_session_ids } = req.body;
         const user = req.user;
@@ -55,7 +60,7 @@ router.post('/', async (req, res) => {
 });
 
 // GET /api/bundles/:id - Get a specific bundle
-router.get('/:id', async (req, res) => {
+router.get('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const user = req.user;
@@ -77,7 +82,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // PUT /api/bundles/:id - Update a bundle
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const { title, prompt, target_session_ids } = req.body;
@@ -104,7 +109,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/bundles/:id - Delete a bundle
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const user = req.user;
@@ -123,7 +128,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/bundles/:id/run - Execute a bundle
-router.post('/:id/run', async (req, res) => {
+router.post('/:id/run', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const user = req.user;
@@ -209,7 +214,7 @@ Aim for a clean, structure presentation with one major topic per page.`;
 });
 
 // GET /api/bundles/:id/results - List results for a bundle
-router.get('/:id/results', async (req, res) => {
+router.get('/:id/results', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
         const user = req.user;
@@ -231,8 +236,8 @@ router.get('/:id/results', async (req, res) => {
     }
 });
 
-// GET /api/bundles/results/:id/pdf - Generate and download PDF
-router.get('/results/:id/pdf', async (req, res) => {
+// GET /api/bundles/results/:id/pdf - Generate and download PDF (PUBLIC)
+router.get('/results/:id/pdf', optionalAuthMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -245,23 +250,10 @@ router.get('/results/:id/pdf', async (req, res) => {
 
         if (error || !result) return res.status(404).json({ error: 'Result not found' });
 
-        // Check ownership (extra safety, though RLS applies if we used anon key, but we are admin on server)
-        // Wait, server uses service key? No, we use supabase client which might use service key or anon.
-        // In this project structure, usually server uses service key or we pass headers.
-        // Assuming we need to verify user if we had req.user, but for download link usually it's public or we use tokens.
-        // For simplicity in this protected route, we assume Auth middleware is running?
-        // Express doesn't auto-apply auth to all routes unless defined. 
-        // Index.js likely applies auth middleware to /api/bundles.
-        // So req.user exists.
-
-        if (result.bundles.user_id !== req.user.id) {
-            return res.status(403).json({ error: 'Unauthorized' });
-        }
-
         // 2. Generate PDF
         const filename = `result_${id}`;
         const title = result.bundles?.title || 'Bundle Result';
-        const userEmail = req.user.email;
+        const userEmail = req.user?.email || 'CloudPilot User';
 
         const pdfPath = await generatePDF(result.result_content, title, filename, userEmail);
 
@@ -281,5 +273,65 @@ router.get('/results/:id/pdf', async (req, res) => {
     }
 });
 
+// POST /api/bundles/results/:id/email - Send result via email
+router.post('/results/:id/email', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const user = req.user;
+
+        // 1. Fetch result
+        const { data: result, error } = await supabase
+            .from('bundle_results')
+            .select('*, bundles(title, user_id)')
+            .eq('id', id)
+            .single();
+
+        if (error || !result) return res.status(404).json({ error: 'Result not found' });
+
+        if (result.bundles.user_id !== user.id) {
+            return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        // 2. Prepare PDF (ensure it exists)
+        const filename = `result_${id}`;
+        const title = result.bundles?.title || 'Bundle Report';
+        const userEmail = user.email;
+
+        // Just ensure PDF is available (generates if missing)
+        const pdfPath = await generatePDF(result.result_content, title, filename, userEmail);
+
+        // 3. Prepare Email
+        // We need an absolute URL for the PDF preview. 
+        // In local dev, we'll use the server's address. 
+        // In production, users should set a BASE_URL env var.
+        const baseUrl = process.env.BASE_URL || `http://${req.get('host')}`;
+        const pdfUrl = `${baseUrl}/api/bundles/results/${id}/pdf?view=true`;
+
+        const emailHtml = await render(React.createElement(BundleEmail, {
+            title,
+            pdfUrl,
+            userEmail
+        }));
+
+        // 4. Send Email
+        const { data: emailData, error: emailError } = await resend.emails.send({
+            from: 'CloudPilot <onboarding@resend.dev>', // Resend default for testing
+            to: [userEmail],
+            subject: `Relatório Disponível: ${title}`,
+            html: emailHtml,
+        });
+
+        if (emailError) {
+            console.error('Resend error:', emailError);
+            return res.status(500).json({ error: 'Failed to send email' });
+        }
+
+        res.json({ success: true, messageId: emailData.id });
+
+    } catch (error) {
+        console.error('Email send error:', error);
+        res.status(500).json({ error: 'Failed to process email request' });
+    }
+});
 
 export default router;

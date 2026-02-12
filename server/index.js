@@ -43,7 +43,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/chat', authMiddleware, chatRouter);
 app.use('/api/sessions', authMiddleware, sessionsRouter);
 app.use('/api/guided-sessions', authMiddleware, guidedSessionsRouter);
-app.use('/api/bundles', authMiddleware, bundlesRouter);
+app.use('/api/bundles', bundlesRouter);
 
 // Serve static files from Vite build in production
 if (process.env.NODE_ENV === 'production') {

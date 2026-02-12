@@ -6,4 +6,4 @@ O trabalho se desenvolve a partir pair-working 1:1 com a equipe de projeto e int
 
 Durante os trabalhos, são realizados miniprojetos de prototipagem, criação de workflows e pipelines, assim como melhorias em todos os aspectos organizacionais críticos para o sucesso das iniciativas.
 
-Todo trabaho pode ser acompanhado por relatórios de resumo pós-reunião com recomendações estratégicas.
+Todo trabalho pode ser acompanhado por relatórios de resumo pós-reunião com recomendações estratégicas.
