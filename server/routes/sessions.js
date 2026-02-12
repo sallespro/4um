@@ -26,6 +26,29 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * GET /api/sessions/mcp
+ * List MCP-originated sessions for the authenticated user
+ */
+router.get('/mcp', async (req, res) => {
+    try {
+        const user = req.user;
+
+        const { data, error } = await supabase
+            .from('sessions')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('source', 'mcp')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (error) {
+        console.error('MCP sessions list error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
  * POST /api/sessions
  * Create a new session for the authenticated user
  * Body: { title? }

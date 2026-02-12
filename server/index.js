@@ -12,6 +12,7 @@ import ragRouter from './routes/rag.js';
 import webhooksRouter from './routes/webhooks.js';
 import guidedSessionsRouter from './routes/guided-sessions.js';
 import bundlesRouter from './routes/bundles.js';
+import mcpRouter from './routes/mcp.js';
 
 // Middleware
 import { authMiddleware } from './middleware/auth.js';
@@ -33,6 +34,7 @@ app.use(express.json());
 app.use('/api/auth', authRouter);
 app.use('/api/webhooks', webhooksRouter);
 app.use('/api/rag', ragRouter);
+app.use('/api/mcp', mcpRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

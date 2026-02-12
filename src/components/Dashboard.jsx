@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Clock, Zap, ArrowRight, Loader2, Trash2, Edit, Plus, Boxes, Play, FileText, Download, X, Mail, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MessageSquare, Clock, Zap, ArrowRight, Loader2, Trash2, Edit, Plus, Boxes, Play, FileText, Download, X, Mail, CheckCircle2, AlertCircle, Server } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -25,6 +25,7 @@ export default function Dashboard() {
     const [bundleResultData, setBundleResultData] = useState(null);
     const [sendingEmailId, setSendingEmailId] = useState(null);
     const [emailStatus, setEmailStatus] = useState(null);
+    const [mcpSessions, setMcpSessions] = useState([]);
 
     useEffect(() => {
         loadData();
@@ -32,10 +33,11 @@ export default function Dashboard() {
 
     async function loadData() {
         try {
-            const [sessionsRes, guidedRes, bundlesRes] = await Promise.all([
+            const [sessionsRes, guidedRes, bundlesRes, mcpRes] = await Promise.all([
                 apiRequest('/api/sessions'),
                 apiRequest('/api/guided-sessions'),
-                apiRequest('/api/bundles')
+                apiRequest('/api/bundles'),
+                apiRequest('/api/sessions/mcp')
             ]);
 
             if (sessionsRes.ok) {
@@ -58,6 +60,11 @@ export default function Dashboard() {
             if (bundlesRes.ok) {
                 const data = await bundlesRes.json();
                 setBundles(data);
+            }
+
+            if (mcpRes.ok) {
+                const data = await mcpRes.json();
+                setMcpSessions(data);
             }
         } catch (error) {
             console.error('Failed to load dashboard data:', error);
@@ -330,6 +337,71 @@ export default function Dashboard() {
                                 </div>
 
                                 <BundleResults bundleId={bundle.id} />
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* MCP Connections */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xl font-semibold">MCP Connections</h2>
+                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">
+                        {mcpSessions.length} session{mcpSessions.length !== 1 ? 's' : ''}
+                    </span>
+                </div>
+
+                {mcpSessions.length === 0 ? (
+                    <div className="p-8 rounded-xl bg-card border border-border text-center text-muted-foreground">
+                        <Server className="w-10 h-10 mx-auto text-muted-foreground/50 mb-3" />
+                        <p>No MCP sessions yet.</p>
+                        <p className="text-sm text-muted-foreground/60 mt-1">
+                            Connect via the MCP endpoint at <code className="text-primary bg-primary/10 px-1 py-0.5 rounded text-xs">/api/mcp</code>
+                        </p>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {mcpSessions.map((session) => (
+                            <div
+                                key={session.id}
+                                className={cn(
+                                    "w-full group p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-all text-left relative",
+                                    searchParams.get('session') === session.id && "border-primary bg-primary/5"
+                                )}
+                            >
+                                <div
+                                    className="flex items-center justify-between cursor-pointer"
+                                    onClick={() => setSearchParams({ session: session.id })}
+                                >
+                                    <div className="flex items-center gap-3 flex-1 min-w-0 pr-12">
+                                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                                            <Server className="w-4 h-4" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-medium truncate">{session.title}</h3>
+                                            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
+                                                <span className="flex items-center gap-1">
+                                                    <Clock className="w-3.5 h-3.5" />
+                                                    {formatDate(session.updated_at || session.created_at)}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Zap className="w-3.5 h-3.5" />
+                                                    {formatTokens(session.total_tokens || 0)} tokens
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={(e) => deleteSession(e, session.id)}
+                                    className="absolute right-14 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 z-10"
+                                    title="Delete session"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                         ))}
                     </div>
