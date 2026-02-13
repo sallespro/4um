@@ -10,9 +10,8 @@
 [1] > cloudpilot@0.0.0 dev:server
 [1] > node server/index.js
 [1] 
-[0] 6:49:29 PM [vite] (client) Re-optimizing dependencies because lockfile has changed
 [0] 
-[0]   VITE v7.3.1  ready in 201 ms
+[0]   VITE v7.3.1  ready in 167 ms
 [0] 
 [0]   ➜  Local:   http://localhost:5173/
 [0]   ➜  Network: use --host to expose
@@ -32,12 +31,13 @@
 [1] ✅ RAG system initialized
 [1] 👁️  Watching for changes in /Users/rrocsal/Documents/dev/code/ai/cloudpilot/pages...
 [1] 🌐 Server running at http://localhost:3001
-[0] 7:23:08 PM [vite] (client) hmr update /src/index.css
-[0] 7:23:10 PM [vite] (client) hmr update /src/index.css
-[1] npm run dev:server exited with code SIGTERM
-[0] 8:36:04 PM [vite] (client) hmr update /src/index.css, /src/components/AuthModal.jsx
-[0] 8:39:24 PM [vite] (client) hmr update /src/components/Layout.jsx, /src/index.css
-[0] 9:18:58 PM [vite] (client) hmr update /src/index.css
-[0] 9:19:00 PM [vite] (client) hmr update /src/index.css
-[0] 9:20:45 PM [vite] (client) hmr update /src/index.css, /src/components/ChatInterface.jsx
-[0] npm run dev exited with code 143
+[1] Chat: Using MCP server at https://cool.cloudpilot.com.br/mcp
+[1] MCP: Connected via StreamableHTTP
+[1] MCP: Discovered tools: [ 'start-notification-stream', 'echo', 'fetch' ]
+[1] MCP: Calling OpenAI Responses API with tools: [ 'start-notification-stream', 'echo', 'fetch' ]
+[1] MCP: Response received, length: 482
+[1] Chat: Using MCP server at https://cool.cloudpilot.com.br/mcp
+[1] MCP: Connected via StreamableHTTP
+[1] MCP: Discovered tools: [ 'start-notification-stream', 'echo', 'fetch' ]
+[1] MCP: Calling OpenAI Responses API with tools: [ 'start-notification-stream', 'echo', 'fetch' ]
+[1] MCP: Response received, length: 2365

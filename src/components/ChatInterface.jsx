@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { Send, User, Bot, Loader2, Plus, ChevronLeft, Save } from 'lucide-react';
+import { Send, User, Bot, Loader2, Plus, ChevronLeft, Save, Wrench, X, Check, Unplug } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiRequest } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
@@ -15,6 +15,12 @@ export default function ChatInterface() {
     const [messages, setMessages] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
     const scrollRef = useRef(null);
+
+    // MCP connection state
+    const [mcpServerUrl, setMcpServerUrl] = useState(() => localStorage.getItem('cloudpilot_mcp_url') || '');
+    const [mcpConnected, setMcpConnected] = useState(() => !!localStorage.getItem('cloudpilot_mcp_url'));
+    const [showMcpSetup, setShowMcpSetup] = useState(false);
+    const [mcpInput, setMcpInput] = useState(() => localStorage.getItem('cloudpilot_mcp_url') || '');
 
     // Sync with URL params
     useEffect(() => {
@@ -85,6 +91,24 @@ export default function ChatInterface() {
         }
     }
 
+    function handleMcpConnect() {
+        if (mcpInput.trim()) {
+            const url = mcpInput.trim();
+            setMcpServerUrl(url);
+            setMcpConnected(true);
+            localStorage.setItem('cloudpilot_mcp_url', url);
+            setShowMcpSetup(false);
+        }
+    }
+
+    function handleMcpDisconnect() {
+        setMcpServerUrl('');
+        setMcpConnected(false);
+        setMcpInput('');
+        localStorage.removeItem('cloudpilot_mcp_url');
+        setShowMcpSetup(false);
+    }
+
     // Send message mutation
     const mutation = useMutation({
         mutationFn: async (content) => {
@@ -107,9 +131,14 @@ export default function ChatInterface() {
             // Optimistic update
             setMessages(prev => [...prev, { role: 'user', content, id: Date.now() }]);
 
+            const body = { sessionId: currentSessionId, message: content };
+            if (mcpConnected && mcpServerUrl) {
+                body.mcpServerUrl = mcpServerUrl;
+            }
+
             const res = await apiRequest('/api/chat', {
                 method: 'POST',
-                body: JSON.stringify({ sessionId: currentSessionId, message: content }),
+                body: JSON.stringify(body),
             });
 
             if (!res.ok) {
@@ -231,8 +260,78 @@ export default function ChatInterface() {
     return (
         <div className="flex flex-col h-full bg-background relative">
             {/* Toolbar */}
-            {messages.length > 0 && (
-                <div className="absolute top-4 right-4 z-10">
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                {/* MCP Connection Button */}
+                <div className="relative">
+                    <button
+                        onClick={() => setShowMcpSetup(!showMcpSetup)}
+                        className={cn(
+                            "p-2 backdrop-blur border rounded-lg shadow-sm transition-colors relative",
+                            mcpConnected
+                                ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
+                                : "bg-background/80 border-border text-muted-foreground hover:text-primary hover:bg-muted"
+                        )}
+                        title={mcpConnected ? `MCP: ${mcpServerUrl}` : "Connect MCP Server"}
+                    >
+                        <Wrench className="w-4 h-4" />
+                        {mcpConnected && (
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+                        )}
+                    </button>
+
+                    {/* MCP Setup Popover */}
+                    {showMcpSetup && (
+                        <div className="absolute top-full right-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-2xl p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
+                            <div className="flex items-center justify-between">
+                                <h3 className="font-medium text-sm">MCP Server</h3>
+                                <button onClick={() => setShowMcpSetup(false)} className="p-1 hover:bg-muted rounded">
+                                    <X className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+
+                            {mcpConnected ? (
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-sm">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full" />
+                                        <span className="text-green-600 font-medium">Connected</span>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground break-all bg-muted/50 rounded-lg px-3 py-2">
+                                        {mcpServerUrl}
+                                    </p>
+                                    <button
+                                        onClick={handleMcpDisconnect}
+                                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 rounded-lg transition-colors"
+                                    >
+                                        <Unplug className="w-3.5 h-3.5" />
+                                        Disconnect
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <input
+                                        type="url"
+                                        value={mcpInput}
+                                        onChange={(e) => setMcpInput(e.target.value)}
+                                        placeholder="https://example.com/mcp"
+                                        className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                                        onKeyDown={(e) => e.key === 'Enter' && handleMcpConnect()}
+                                    />
+                                    <button
+                                        onClick={handleMcpConnect}
+                                        disabled={!mcpInput.trim()}
+                                        className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                                    >
+                                        <Check className="w-3.5 h-3.5" />
+                                        Connect
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                {/* Save Button */}
+                {messages.length > 0 && (
                     <button
                         onClick={() => setShowSaveModal(true)}
                         className="p-2 bg-background/80 backdrop-blur border border-border rounded-lg shadow-sm hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
@@ -240,6 +339,16 @@ export default function ChatInterface() {
                     >
                         <Save className="w-4 h-4" />
                     </button>
+                )}
+            </div>
+
+            {/* MCP Active Banner */}
+            {mcpConnected && (
+                <div className="flex items-center gap-2 px-4 py-1.5 bg-primary/5 border-b border-primary/10 text-xs text-primary">
+                    <Wrench className="w-3 h-3" />
+                    <span>MCP tools active</span>
+                    <span className="text-primary/50">·</span>
+                    <span className="text-primary/70 truncate">{mcpServerUrl}</span>
                 </div>
             )}
 
@@ -344,3 +453,4 @@ export default function ChatInterface() {
         </div>
     );
 }
+

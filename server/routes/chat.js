@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { supabase } from '../lib/supabase.js';
-import { generateCompletion } from '../services/openai.js';
+import { generateCompletion, generateCompletionWithMCP } from '../services/openai.js';
 import { getRAGContext } from '../services/rag.js';
 
 const router = Router();
@@ -8,12 +8,12 @@ const router = Router();
 /**
  * POST /api/chat
  * Send a message and get an AI response
- * Body: { sessionId, message }
+ * Body: { sessionId, message, mcpServerUrl? }
  * Requires auth - user from req.user
  */
 router.post('/', async (req, res) => {
     try {
-        const { sessionId, message } = req.body;
+        const { sessionId, message, mcpServerUrl } = req.body;
         const user = req.user;
 
         if (!message) {
@@ -23,27 +23,31 @@ router.post('/', async (req, res) => {
         // Get RAG context for the message
         const context = await getRAGContext(message);
 
-        // Get conversation history if sessionId provided
-        let messages = [];
-        if (sessionId) {
-            const { data: history } = await supabase
-                .from('messages')
-                .select('content, role')
-                .eq('session_id', sessionId)
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: true })
-                .limit(20);
+        let responseContent, usage;
 
-            if (history) {
-                messages = history;
+        if (mcpServerUrl) {
+            // Use OpenAI Responses API with external MCP tools
+            console.log('Chat: Using MCP server at', mcpServerUrl);
+            ({ content: responseContent, usage } = await generateCompletionWithMCP(message, mcpServerUrl, context));
+        } else {
+            // Standard completion flow
+            let messages = [];
+            if (sessionId) {
+                const { data: history } = await supabase
+                    .from('messages')
+                    .select('content, role')
+                    .eq('session_id', sessionId)
+                    .eq('user_id', user.id)
+                    .order('created_at', { ascending: true })
+                    .limit(20);
+
+                if (history) {
+                    messages = history;
+                }
             }
+            messages.push({ role: 'user', content: message });
+            ({ content: responseContent, usage } = await generateCompletion(messages, context));
         }
-
-        // Add current message
-        messages.push({ role: 'user', content: message });
-
-        // Generate AI response with token usage
-        const { content: responseContent, usage } = await generateCompletion(messages, context);
 
         // Save messages to database if sessionId provided
         if (sessionId) {

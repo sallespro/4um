@@ -33,3 +33,4 @@
 [1] ✅ RAG system initialized
 [1] 👁️  Watching for changes in /Users/rrocsal/Documents/dev/code/ai/cloudpilot/pages...
 [1] 🌐 Server running at http://localhost:3001
+[1] npm run dev:server exited with code SIGTERM

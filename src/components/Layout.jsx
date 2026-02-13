@@ -81,7 +81,7 @@ export default function Layout() {
                     <div className={cn("py-2", sidebarOpen && "px-3")}>
                         {sidebarOpen && (
                             <span className="text-xs font-medium text-muted-foreground/60 uppercase tracking-wider">
-                                Modules
+                                Dataset
                             </span>
                         )}
                     </div>

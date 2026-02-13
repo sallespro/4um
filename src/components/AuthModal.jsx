@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Mail, Loader2, Sparkles } from 'lucide-react';
+import { Mail, Loader2 } from 'lucide-react';
 import { login } from '@/lib/api';
+import logoIcon from '@/8666789_layout_design_iconfinder.svg';
 
 export default function AuthModal({ onSuccess }) {
     const [email, setEmail] = useState('');
@@ -30,7 +31,7 @@ export default function AuthModal({ onSuccess }) {
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-4">
-                        <Sparkles className="w-8 h-8 text-primary" />
+                        <img src={logoIcon} alt="CloudPilot Logo" className="w-8 h-8 opacity-90" />
                     </div>
                     <h1 className="text-2xl font-bold text-foreground">cloudpilot</h1>
                     <p className="text-muted-foreground mt-2">Entre com seu e-mail</p>
