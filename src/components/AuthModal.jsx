@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Mail, Loader2 } from 'lucide-react';
+import { Mail, Loader2, X } from 'lucide-react';
 import { login } from '@/lib/api';
 import logoIcon from '@/8666789_layout_design_iconfinder.svg';
 
-export default function AuthModal({ onSuccess }) {
+export default function AuthModal({ onSuccess, onClose }) {
     const [email, setEmail] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -26,8 +26,18 @@ export default function AuthModal({ onSuccess }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-card border border-border rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card border border-border rounded-2xl shadow-2xl p-8 w-full max-w-md relative animate-in fade-in zoom-in duration-300">
+                {/* Close Button */}
+                {onClose && (
+                    <button
+                        onClick={onClose}
+                        className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                )}
+
                 {/* Header */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 mb-4">

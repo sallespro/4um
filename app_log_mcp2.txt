@@ -34,3 +34,6 @@
 [1] 👁️  Watching for changes in /Users/rrocsal/Documents/dev/code/ai/cloudpilot/pages...
 [1] 🌐 Server running at http://localhost:3001
 [1] npm run dev:server exited with code SIGTERM
+[0] 9:03:13 AM [vite] (client) page reload index.html
+[0] 10:12:29 AM [vite] (client) page reload index.html
+[0] 10:24:52 AM [vite] (client) page reload index.html

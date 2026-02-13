@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { getUser, logout, isAuthenticated } from '@/lib/api';
 import AuthModal from './AuthModal';
 import ChatInterface from './ChatInterface';
+import LandingPage from './LandingPage';
 
 const navItems = [
     { icon: FileText, label: 'Visão Geral', to: '/pages/1 - visão geral' },
@@ -21,7 +22,10 @@ export default function Layout() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [chatOpen, setChatOpen] = useState(true);
     const [user, setUser] = useState(() => getUser());
-    const [showAuth, setShowAuth] = useState(() => !isAuthenticated());
+
+    // Auth state
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
     const chatRef = useRef();
 
     // MCP status for the icon (reactive enough via localstorage initially)
@@ -40,15 +44,20 @@ export default function Layout() {
 
     const handleAuthSuccess = (userData) => {
         setUser(userData);
-        setShowAuth(false);
+        setIsAuthModalOpen(false);
     };
 
     const handleLogout = () => {
         logout();
+        setUser(null);
     };
 
-    if (showAuth) {
-        return <AuthModal onSuccess={handleAuthSuccess} />;
+    // If not authenticated
+    if (!user) {
+        if (isAuthModalOpen) {
+            return <AuthModal onSuccess={handleAuthSuccess} onClose={() => setIsAuthModalOpen(false)} />;
+        }
+        return <LandingPage onLoginClick={() => setIsAuthModalOpen(true)} />;
     }
 
     return (
