@@ -32,17 +32,22 @@ router.post('/email', async (req, res) => {
             }]);
 
         if (error) {
-            console.error('Failed to store email:', error);
-            // Still return 200 to acknowledge receipt
+            console.error('❌ Failed to store email in Supabase:', JSON.stringify(error, null, 2));
+            // Return error in response for debugging (only in development or specific tests)
+            return res.status(500).json({
+                received: true,
+                processed: false,
+                error: 'Database storage failed',
+                details: error
+            });
         }
 
         console.log(`📧 Received email from ${data.from}: ${data.subject}`);
 
         res.json({ received: true, processed: true });
     } catch (error) {
-        console.error('Webhook error:', error);
-        // Return 200 to prevent retries
-        res.json({ received: true, error: error.message });
+        console.error('❌ Webhook processing error:', error);
+        res.status(500).json({ received: true, error: error.message });
     }
 });
 

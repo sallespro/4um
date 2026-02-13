@@ -84,13 +84,6 @@ export default function LandingPage({ onLoginClick }) {
                             <Globe className="w-4 h-4" />
                             <span className="uppercase">{i18n.language}</span>
                         </button>
-                        <button
-                            onClick={onLoginClick}
-                            className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-lg hover:opacity-90 transition-all shadow-lg shadow-blue-500/20"
-                        >
-                            <LogIn className="w-4 h-4" />
-                            <span>{t('nav.login')}</span>
-                        </button>
                     </div>
                 </div>
             </nav>
@@ -106,16 +99,12 @@ export default function LandingPage({ onLoginClick }) {
                         <p className="text-xl text-slate-600 dark:text-gray-400 max-w-2xl mx-auto leading-relaxed">
                             {t('hero.subtitle')}
                         </p>
+                    </div>
 
-                        <div className="pt-4">
-                            <button
-                                onClick={onLoginClick}
-                                className="group relative px-8 py-4 bg-blue-600 text-white rounded-lg font-semibold text-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-500/30 flex items-center gap-2 mx-auto"
-                            >
-                                <span>{t('hero.cta')}</span>
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                            </button>
-                        </div>
+                    {/* Features Section Heading */}
+                    <div className="text-center mb-16">
+                        <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">{t('features.sectionTitle')}</h2>
+                        <div className="w-24 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 mx-auto rounded-full"></div>
                     </div>
 
                     {/* Features Grid - Clean Overlay Style */}
@@ -183,6 +172,12 @@ export default function LandingPage({ onLoginClick }) {
                                         <a href="#" className="hover:text-blue-500 transition-colors">LinkedIn</a>
                                         <a href="#" className="hover:text-blue-500 transition-colors">Twitter</a>
                                         <a href="#" className="hover:text-blue-500 transition-colors">GitHub</a>
+                                        <button
+                                            onClick={onLoginClick}
+                                            className="hover:text-blue-500 transition-colors cursor-pointer"
+                                        >
+                                            AI Studio
+                                        </button>
                                     </div>
                                 </div>
                             </div>

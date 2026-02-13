@@ -20,6 +20,7 @@ i18n
                         cta: "Enter Studio"
                     },
                     features: {
+                        sectionTitle: "Professional Services",
                         consulting: {
                             title: "Strategic Consulting",
                             desc: "From roadmap to implementation, we guide your AI adoption journey."
@@ -64,6 +65,7 @@ i18n
                         cta: "Entrar no Studio"
                     },
                     features: {
+                        sectionTitle: "Serviços Profissionais",
                         consulting: {
                             title: "Consultoria Estratégica",
                             desc: "Do roadmap à implementação, guiamos sua jornada de adoção de IA."

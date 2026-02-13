@@ -36,8 +36,8 @@ export default function MatrixBackground({ theme = 'dark' }) {
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Text color
-            // Dark: Indigo-500 (#6366f1) or Blue-500 (#3b82f6)
-            ctx.fillStyle = theme === 'dark' ? '#4f46e5' : '#3b82f6';
+            // Dark: Indigo-400 (#818cf8), Light: Blue-500 (#3b82f6)
+            ctx.fillStyle = theme === 'dark' ? '#818cf8' : '#3b82f6';
             ctx.font = `${fontSize}px monospace`;
 
             for (let i = 0; i < drops.length; i++) {
@@ -68,7 +68,7 @@ export default function MatrixBackground({ theme = 'dark' }) {
     return (
         <canvas
             ref={canvasRef}
-            className="fixed inset-0 -z-10 opacity-[0.15] dark:opacity-[0.2]"
+            className="fixed inset-0 -z-10 opacity-[0.15] dark:opacity-[0.4]"
         />
     );
 }

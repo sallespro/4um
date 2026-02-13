@@ -94,3 +94,13 @@
 [0] 10:28:22 AM [vite] (client) page reload src/i18n.js
 [0] 10:28:38 AM [vite] (client) page reload src/i18n.js
 [0] 10:29:17 AM [vite] (client) page reload src/i18n.js
+[0] 4:09:40 PM [vite] (client) hmr update /src/index.css, /src/components/LandingPage.jsx
+[0] 4:09:51 PM [vite] (client) page reload src/i18n.js
+[0] 4:09:53 PM [vite] (client) page reload src/i18n.js
+[0] 4:26:48 PM [vite] (client) hmr update /src/index.css, /src/components/LandingPage.jsx
+[0] 4:33:01 PM [vite] (client) hmr update /src/index.css, /src/components/LandingPage.jsx
+[0] 4:33:03 PM [vite] (client) hmr update /src/index.css, /src/components/LandingPage.jsx
+[0] 5:22:27 PM [vite] (client) hmr update /src/index.css, /src/components/MatrixBackground.jsx
+[0] 5:42:23 PM [vite] (client) hmr update /src/index.css
+[0] 5:42:25 PM [vite] (client) hmr update /src/index.css
+[0] 5:42:32 PM [vite] (client) hmr update /src/index.css
