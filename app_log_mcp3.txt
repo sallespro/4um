@@ -41,3 +41,10 @@
 [1] MCP: Discovered tools: [ 'start-notification-stream', 'echo', 'fetch' ]
 [1] MCP: Calling OpenAI Responses API with tools: [ 'start-notification-stream', 'echo', 'fetch' ]
 [1] MCP: Response received, length: 2365
+[0] 10:25:42 PM [vite] (client) hmr update /src/index.css, /src/components/ChatInterface.jsx
+[0] 10:26:09 PM [vite] (client) hmr update /src/components/Layout.jsx, /src/index.css
+[1] Chat: Using MCP server at https://cool.cloudpilot.com.br/mcp
+[1] MCP: Connected via StreamableHTTP
+[1] MCP: Discovered tools: [ 'start-notification-stream', 'echo', 'fetch' ]
+[1] MCP: Calling OpenAI Responses API with tools: [ 'start-notification-stream', 'echo', 'fetch' ]
+[1] MCP: Response received, length: 0

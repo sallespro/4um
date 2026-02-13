@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Send, User, Bot, Loader2, Plus, ChevronLeft, Save, Wrench, X, Check, Unplug } from 'lucide-react';
@@ -7,7 +7,7 @@ import { apiRequest } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import GuidedSessionEditor from './GuidedSessionEditor';
 
-export default function ChatInterface() {
+const ChatInterface = forwardRef((props, ref) => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [input, setInput] = useState('');
     const [sessionId, setSessionId] = useState(searchParams.get('session'));
@@ -21,6 +21,12 @@ export default function ChatInterface() {
     const [mcpConnected, setMcpConnected] = useState(() => !!localStorage.getItem('cloudpilot_mcp_url'));
     const [showMcpSetup, setShowMcpSetup] = useState(false);
     const [mcpInput, setMcpInput] = useState(() => localStorage.getItem('cloudpilot_mcp_url') || '');
+
+    useImperativeHandle(ref, () => ({
+        createNewChat: createSession,
+        toggleMcpSetup: () => setShowMcpSetup(prev => !prev),
+        mcpConnected
+    }), [createSession, mcpConnected]);
 
     // Sync with URL params
     useEffect(() => {
@@ -259,27 +265,10 @@ export default function ChatInterface() {
 
     return (
         <div className="flex flex-col h-full bg-background relative">
-            {/* Toolbar */}
+            {/* Toolbar - Relocated to Layout.jsx header, keeping popover and save button here for contextual UI */}
             <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-                {/* MCP Connection Button */}
                 <div className="relative">
-                    <button
-                        onClick={() => setShowMcpSetup(!showMcpSetup)}
-                        className={cn(
-                            "p-2 backdrop-blur border rounded-lg shadow-sm transition-colors relative",
-                            mcpConnected
-                                ? "bg-primary/10 border-primary/30 text-primary hover:bg-primary/20"
-                                : "bg-background/80 border-border text-muted-foreground hover:text-primary hover:bg-muted"
-                        )}
-                        title={mcpConnected ? `MCP: ${mcpServerUrl}` : "Connect MCP Server"}
-                    >
-                        <Wrench className="w-4 h-4" />
-                        {mcpConnected && (
-                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
-                        )}
-                    </button>
-
-                    {/* MCP Setup Popover */}
+                    {/* MCP Setup Popover - Triggered from Layout.jsx */}
                     {showMcpSetup && (
                         <div className="absolute top-full right-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-2xl p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200 z-50">
                             <div className="flex items-center justify-between">
@@ -341,16 +330,6 @@ export default function ChatInterface() {
                     </button>
                 )}
             </div>
-
-            {/* MCP Active Banner */}
-            {mcpConnected && (
-                <div className="flex items-center gap-2 px-4 py-1.5 bg-primary/5 border-b border-primary/10 text-xs text-primary">
-                    <Wrench className="w-3 h-3" />
-                    <span>MCP tools active</span>
-                    <span className="text-primary/50">·</span>
-                    <span className="text-primary/70 truncate">{mcpServerUrl}</span>
-                </div>
-            )}
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth" ref={scrollRef}>
@@ -452,5 +431,10 @@ export default function ChatInterface() {
             )}
         </div>
     );
-}
+});
+
+ChatInterface.displayName = 'ChatInterface';
+export default ChatInterface;
+
+
 

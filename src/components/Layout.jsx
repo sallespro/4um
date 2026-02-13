@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { MessageSquare, Layout as LayoutIcon, FileText, Settings, Menu, LogOut, History } from 'lucide-react';
+import { MessageSquare, Layout as LayoutIcon, FileText, Settings, Menu, LogOut, History, Plus, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getUser, logout, isAuthenticated } from '@/lib/api';
 import AuthModal from './AuthModal';
@@ -22,6 +22,21 @@ export default function Layout() {
     const [chatOpen, setChatOpen] = useState(true);
     const [user, setUser] = useState(() => getUser());
     const [showAuth, setShowAuth] = useState(() => !isAuthenticated());
+    const chatRef = useRef();
+
+    // MCP status for the icon (reactive enough via localstorage initially)
+    const [mcpConnected, setMcpConnected] = useState(() => !!localStorage.getItem('cloudpilot_mcp_url'));
+
+    // Check localStorage periodically or on certain events if needed, but for now simple sync
+    useEffect(() => {
+        const checkMcp = () => setMcpConnected(!!localStorage.getItem('cloudpilot_mcp_url'));
+        window.addEventListener('storage', checkMcp);
+        const interval = setInterval(checkMcp, 2000); // Polling as fallback for cross-tab or same-tab logic
+        return () => {
+            window.removeEventListener('storage', checkMcp);
+            clearInterval(interval);
+        };
+    }, []);
 
     const handleAuthSuccess = (userData) => {
         setUser(userData);
@@ -145,25 +160,54 @@ export default function Layout() {
             >
                 {/* Chat Header */}
                 <div className="flex items-center justify-between h-16 px-4 border-b border-border">
-                    <button
-                        onClick={() => setChatOpen(!chatOpen)}
-                        className="p-2 rounded-lg hover:bg-muted transition-colors"
-                        title={chatOpen ? "Close chat" : "Open chat"}
-                    >
-                        <MessageSquare className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() => setChatOpen(!chatOpen)}
+                            className="p-2 rounded-lg hover:bg-muted transition-colors"
+                            title={chatOpen ? "Close chat" : "Open chat"}
+                        >
+                            <MessageSquare className="w-5 h-5" />
+                        </button>
+                        {chatOpen && (
+                            <div className="flex items-center gap-1 ml-1 border-l border-border pl-2 animate-in fade-in duration-300">
+                                <button
+                                    onClick={() => chatRef.current?.createNewChat()}
+                                    className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
+                                    title="New Chat"
+                                >
+                                    <Plus className="w-4.5 h-4.5" />
+                                </button>
+                                <button
+                                    onClick={() => chatRef.current?.toggleMcpSetup()}
+                                    className={cn(
+                                        "p-1.5 rounded-lg transition-colors relative",
+                                        mcpConnected
+                                            ? "text-primary hover:bg-primary/10"
+                                            : "text-muted-foreground hover:bg-muted hover:text-primary"
+                                    )}
+                                    title="MCP Tools"
+                                >
+                                    <Wrench className="w-4.5 h-4.5" />
+                                    {mcpConnected && (
+                                        <span className="absolute top-1 right-1 w-2 h-2 bg-green-500 rounded-full border border-background" />
+                                    )}
+                                </button>
+                            </div>
+                        )}
+                    </div>
                     {chatOpen && (
-                        <span className="font-medium text-muted-foreground">Agent</span>
+                        <span className="font-medium text-muted-foreground text-sm">Agent</span>
                     )}
                 </div>
 
                 {/* Chat Content */}
                 {chatOpen && (
                     <div className="flex-1 overflow-hidden">
-                        <ChatInterface />
+                        <ChatInterface ref={chatRef} />
                     </div>
                 )}
             </aside>
         </div>
     );
 }
+
